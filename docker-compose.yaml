@@ -20,14 +20,159 @@ services:
     command: ["postgres", "-c", "config_file=/etc/postgresql/postgresql.conf"]
     restart: on-failure
 
+  prasorganic-order-service-redis-node-1:
+    container_name: prasorganic-order-service-redis-node-1
+    image: redis:7.2.2
+    ports:
+      - 9371:6379
+      - 19371:16379
+    volumes:
+      - type: bind
+        source: ./doc/database/redis/redis-node-1.conf
+        target: /usr/local/etc/redis/redis.conf
+      - type: volume
+        source: prasorganic-order-service-redis-data-node-1
+        target: /data
+    networks:
+      prasorganic-order-service-redis-network:
+        ipv4_address: 192.48.0.11
+      prasorganic-order-service-network:
+    command: ["redis-server", "/usr/local/etc/redis/redis.conf"]
+    restart: on-failure
+  prasorganic-order-service-redis-node-2:
+    container_name: prasorganic-order-service-redis-node-2
+    image: redis:7.2.2
+    ports:
+      - 9372:6379
+      - 19372:16379
+    volumes:
+      - type: bind
+        source: ./doc/database/redis/redis-node-2.conf
+        target: /usr/local/etc/redis/redis.conf
+      - type: volume
+        source: prasorganic-order-service-redis-data-node-2
+        target: /data
+    networks:
+      prasorganic-order-service-redis-network:
+        ipv4_address: 192.48.0.12
+      prasorganic-order-service-network:
+    command: ["redis-server", "/usr/local/etc/redis/redis.conf"]
+    restart: on-failure
+
+  prasorganic-order-service-redis-node-3:
+    container_name: prasorganic-order-service-redis-node-3
+    image: redis:7.2.2
+    ports:
+      - 9373:6379
+      - 19373:16379
+    volumes:
+      - type: bind
+        source: ./doc/database/redis/redis-node-3.conf
+        target: /usr/local/etc/redis/redis.conf
+      - type: volume
+        source: prasorganic-order-service-redis-data-node-3
+        target: /data
+    networks:
+      prasorganic-order-service-redis-network:
+        ipv4_address: 192.48.0.13
+      prasorganic-order-service-network:
+    command: ["redis-server", "/usr/local/etc/redis/redis.conf"]
+    restart: on-failure
+
+  prasorganic-order-service-redis-node-4:
+    container_name: prasorganic-order-service-redis-node-4
+    image: redis:7.2.2
+    ports:
+      - 9374:6379
+      - 19374:16379
+    volumes:
+      - type: bind
+        source: ./doc/database/redis/redis-node-4.conf
+        target: /usr/local/etc/redis/redis.conf
+      - type: volume
+        source: prasorganic-order-service-redis-data-node-4
+        target: /data
+    networks:
+      prasorganic-order-service-redis-network:
+        ipv4_address: 192.48.0.14
+      prasorganic-order-service-network:
+    command: ["redis-server", "/usr/local/etc/redis/redis.conf"]
+    restart: on-failure
+
+  prasorganic-order-service-redis-node-5:
+    container_name: prasorganic-order-service-redis-node-5
+    image: redis:7.2.2
+    ports:
+      - 9375:6379
+      - 19375:16379
+    volumes:
+      - type: bind
+        source: ./doc/database/redis/redis-node-5.conf
+        target: /usr/local/etc/redis/redis.conf
+      - type: volume
+        source: prasorganic-order-service-redis-data-node-5
+        target: /data
+    networks:
+      prasorganic-order-service-redis-network:
+        ipv4_address: 192.48.0.15
+      prasorganic-order-service-network:
+    command: ["redis-server", "/usr/local/etc/redis/redis.conf"]
+    restart: on-failure
+
+  prasorganic-order-service-redis-node-6:
+    container_name: prasorganic-order-service-redis-node-6
+    image: redis:7.2.2
+    ports:
+      - 9376:6379
+      - 19376:16379
+    volumes:
+      - type: bind
+        source: ./doc/database/redis/redis-node-6.conf
+        target: /usr/local/etc/redis/redis.conf
+      - type: volume
+        source: prasorganic-order-service-redis-data-node-6
+        target: /data
+    networks:
+      prasorganic-order-service-redis-network:
+        ipv4_address: 192.48.0.16
+      prasorganic-order-service-network:
+    command: ["redis-server", "/usr/local/etc/redis/redis.conf"]
+    restart: on-failure
+
+  prasorganic-order-service-redisinsight:
+    container_name: prasorganic-order-service-redisinsight
+    image: redislabs/redisinsight:2.50
+    ports:
+      - 5543:5540
+    networks:
+      - prasorganic-order-service-redis-network
+
 volumes:
   prasorganic-order-service-postgres-data:
     name: prasorganic-order-service-postgres-data
+  prasorganic-order-service-redis-data-node-1:
+    name: prasorganic-order-service-redis-data-node-1
+  prasorganic-order-service-redis-data-node-2:
+    name: prasorganic-order-service-redis-data-node-2
+  prasorganic-order-service-redis-data-node-3:
+    name: prasorganic-order-service-redis-data-node-3
+  prasorganic-order-service-redis-data-node-4:
+    name: prasorganic-order-service-redis-data-node-4
+  prasorganic-order-service-redis-data-node-5:
+    name: prasorganic-order-service-redis-data-node-5
+  prasorganic-order-service-redis-data-node-6:
+    name: prasorganic-order-service-redis-data-node-6
 
 networks:
   prasorganic-order-service-network:
     name: prasorganic-order-service-network
     driver: bridge
+  prasorganic-order-service-redis-network:
+    name: prasorganic-order-service-redis-network
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 192.48.0.0/16
   prasorganic-network:
     name: prasorganic-network
     external: true

@@ -19,7 +19,8 @@ func InitServer(ts service.Transaction) *server.Restful {
 
 func InitClient() *client.Restful {
 	midtransDelivery := delivery.NewMidtrans()
-	restfulClient := client.NewRestful(midtransDelivery)
+	shipperDelivery := delivery.NewShipper()
+	restfulClient := client.NewRestful(midtransDelivery, shipperDelivery)
 
 	return restfulClient
 }

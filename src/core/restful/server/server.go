@@ -39,7 +39,7 @@ func NewRestful(th *handler.Transaction, m *middleware.Middleware) *Restful {
 		AllowCredentials: true,
 	}))
 
-	router.Transaction(app, th, m)
+	router.Order(app, th, m)
 
 	return &Restful{
 		app:                app,

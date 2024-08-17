@@ -7,5 +7,6 @@ import (
 )
 
 type ProductGrpc interface {
-	UpdateStock(ctx context.Context, data []*entity.ProductOrder) error
+	ReduceStocks(ctx context.Context, data []*entity.ProductOrder) error
+	RollbackStocks(ctx context.Context, data []*entity.ProductOrder) error
 }

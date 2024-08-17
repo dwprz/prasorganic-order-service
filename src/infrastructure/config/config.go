@@ -10,6 +10,15 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+type store struct {
+	Name        string
+	PhoneNumber string
+	Address     string
+	AreaId      int
+	Latitude    string
+	Longitude   string
+}
+
 type currentApp struct {
 	RestfulAddress string
 	GrpcPort       string
@@ -24,6 +33,12 @@ type apiGateway struct {
 	BasicAuth         string
 	BasicAuthUsername string
 	BasicAuthPassword string
+}
+
+type kafka struct {
+	Addr1 string
+	Addr2 string
+	Addr3 string
 }
 
 type postgres struct {
@@ -53,14 +68,28 @@ type midtrans struct {
 	ServerKey string
 }
 
+type shipper struct {
+	BaseUrl string
+	ApiKey  string
+}
+
+type shipping struct {
+	Coverage    string
+	PaymentType string
+}
+
 type Config struct {
+	Store      *store
 	CurrentApp *currentApp
 	FrontEnd   *frontEnd
+	Kafka      *kafka
 	Postgres   *postgres
 	Redis      *redis
 	ApiGateway *apiGateway
 	Jwt        *jwt
 	Midtrans   *midtrans
+	Shipper    *shipper
+	Shipping   *shipping
 }
 
 var Conf *Config

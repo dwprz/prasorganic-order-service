@@ -24,12 +24,22 @@ func setUpForNonDevelopment(appStatus string) *Config {
 
 	mountPath := "prasorganic-secrets" + "-" + strings.ToLower(appStatus)
 
+	storeSecrets, err := client.KVv2(mountPath).Get(context.Background(), "store")
+	if err != nil {
+		log.Logger.WithFields(logrus.Fields{"location": "config.setUpForNonDevelopment", "section": "KVv2.Get"}).Fatal(err)
+	}
+
 	orderServiceSecrets, err := client.KVv2(mountPath).Get(context.Background(), "order-service")
 	if err != nil {
 		log.Logger.WithFields(logrus.Fields{"location": "config.setUpForNonDevelopment", "section": "KVv2.Get"}).Fatal(err)
 	}
 
 	frontEndSecrets, err := client.KVv2(mountPath).Get(context.Background(), "front-end")
+	if err != nil {
+		log.Logger.WithFields(logrus.Fields{"location": "config.setUpForNonDevelopment", "section": "KVv2.Get"}).Fatal(err)
+	}
+
+	kafkaSecrets, err := client.KVv2(mountPath).Get(context.Background(), "kafka")
 	if err != nil {
 		log.Logger.WithFields(logrus.Fields{"location": "config.setUpForNonDevelopment", "section": "KVv2.Get"}).Fatal(err)
 	}
@@ -49,12 +59,35 @@ func setUpForNonDevelopment(appStatus string) *Config {
 		log.Logger.WithFields(logrus.Fields{"location": "config.setUpForNonDevelopment", "section": "KVv2.Get"}).Fatal(err)
 	}
 
+	shipperSecrets, err := client.KVv2(mountPath).Get(context.Background(), "shipper")
+	if err != nil {
+		log.Logger.WithFields(logrus.Fields{"location": "config.setUpForNonDevelopment", "section": "KVv2.Get"}).Fatal(err)
+	}
+
+	shippingSecrets, err := client.KVv2(mountPath).Get(context.Background(), "shipping-service")
+	if err != nil {
+		log.Logger.WithFields(logrus.Fields{"location": "config.setUpForNonDevelopment", "section": "KVv2.Get"}).Fatal(err)
+	}
+
+	storeConf := new(store)
+	storeConf.Name = storeSecrets.Data["NAME"].(string)
+	storeConf.PhoneNumber = storeSecrets.Data["PHONE_NUMBER"].(string)
+	storeConf.Address = storeSecrets.Data["ADDRESS"].(string)
+	storeConf.AreaId = storeSecrets.Data["AREA_ID"].(int)
+	storeConf.Latitude = storeSecrets.Data["LATITUDE"].(string)
+	storeConf.Longitude = storeSecrets.Data["LONGITUDE"].(string)
+
 	currentAppConf := new(currentApp)
 	currentAppConf.RestfulAddress = orderServiceSecrets.Data["RESTFUL_ADDRESS"].(string)
 	currentAppConf.GrpcPort = orderServiceSecrets.Data["GRPC_PORT"].(string)
 
 	frontEndConf := new(frontEnd)
 	frontEndConf.BaseUrl = frontEndSecrets.Data["BASE_URL"].(string)
+
+	kafkaConf := new(kafka)
+	kafkaConf.Addr1 = kafkaSecrets.Data["ADDRESS_1"].(string)
+	kafkaConf.Addr2 = kafkaSecrets.Data["ADDRESS_2"].(string)
+	kafkaConf.Addr3 = kafkaSecrets.Data["ADDRESS_3"].(string)
 
 	postgresConf := new(postgres)
 	postgresConf.Url = orderServiceSecrets.Data["POSTGRES_URL"].(string)
@@ -100,13 +133,25 @@ func setUpForNonDevelopment(appStatus string) *Config {
 	midtransConf.BaseUrl = midtransSecrets.Data["BASE_URL"].(string)
 	midtransConf.ServerKey = midtransSecrets.Data["SERVER_KEY"].(string)
 
+	shipperConf := new(shipper)
+	shipperConf.BaseUrl = shipperSecrets.Data["BASE_URL"].(string)
+	shipperConf.ApiKey = shipperSecrets.Data["API_KEY"].(string)
+
+	shippingConf := new(shipping)
+	shippingConf.Coverage = shippingSecrets.Data["COVERAGE"].(string)
+	shippingConf.PaymentType = shippingSecrets.Data["PAYMENT_TYPE"].(string)
+
 	return &Config{
+		Store:      storeConf,
 		CurrentApp: currentAppConf,
 		FrontEnd:   frontEndConf,
+		Kafka:      kafkaConf,
 		Postgres:   postgresConf,
 		Redis:      redisConf,
 		ApiGateway: apiGatewayConf,
 		Jwt:        jwtConf,
 		Midtrans:   midtransConf,
+		Shipper:    shipperConf,
+		Shipping:   shippingConf,
 	}
 }
