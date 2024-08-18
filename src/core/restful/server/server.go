@@ -15,12 +15,12 @@ import (
 
 // this main restful server
 type Restful struct {
-	app                *fiber.App
-	transactionHandler *handler.Transaction
-	middleware         *middleware.Middleware
+	app          *fiber.App
+	orderHandler *handler.Order
+	middleware   *middleware.Middleware
 }
 
-func NewRestful(th *handler.Transaction, m *middleware.Middleware) *Restful {
+func NewRestful(oh *handler.Order, m *middleware.Middleware) *Restful {
 	app := fiber.New(fiber.Config{
 		CaseSensitive: true,
 		StrictRouting: true,
@@ -39,12 +39,12 @@ func NewRestful(th *handler.Transaction, m *middleware.Middleware) *Restful {
 		AllowCredentials: true,
 	}))
 
-	router.Order(app, th, m)
+	router.Order(app, oh, m)
 
 	return &Restful{
-		app:                app,
-		transactionHandler: th,
-		middleware:         m,
+		app:          app,
+		orderHandler: oh,
+		middleware:   m,
 	}
 }
 

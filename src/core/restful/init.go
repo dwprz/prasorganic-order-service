@@ -9,11 +9,11 @@ import (
 	"github.com/dwprz/prasorganic-order-service/src/interface/service"
 )
 
-func InitServer(ts service.Transaction) *server.Restful {
-	txHandler := handler.NewTransaction(ts)
+func InitServer(ts service.Transaction, os service.Order) *server.Restful {
+	orderHandler := handler.NewOrder(ts, os)
 	middleware := middleware.New()
 
-	restfulServer := server.NewRestful(txHandler, middleware)
+	restfulServer := server.NewRestful(orderHandler, middleware)
 	return restfulServer
 }
 

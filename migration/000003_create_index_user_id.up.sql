@@ -1,0 +1,1 @@
+CREATE INDEX IF NOT EXISTS user_id_hash ON orders USING HASH (user_id);

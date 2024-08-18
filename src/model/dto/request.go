@@ -28,3 +28,8 @@ type TransactionReq struct {
 	Order    *entity.Order          `json:"order"`
 	Products []*entity.ProductOrder `json:"products"`
 }
+
+type GetOrdersByCurrentUserReq struct {
+	UserId string `validate:"required,min=21,max=21"`
+	Page   int    `validate:"required,max=100"`
+}

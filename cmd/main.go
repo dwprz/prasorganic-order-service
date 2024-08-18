@@ -54,7 +54,7 @@ func main() {
 
 	go kafkaConsumer.Consume(ctx)
 
-	restfulServer := restful.InitServer(txService)
+	restfulServer := restful.InitServer(txService, orderService)
 	defer restfulServer.Stop()
 
 	go restfulServer.Run()

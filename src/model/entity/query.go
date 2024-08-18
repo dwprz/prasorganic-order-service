@@ -42,3 +42,8 @@ type QueryJoin struct {
 	Quantity        int         `json:"quantity" gorm:"column:quantity"`
 	Price           int         `json:"price" gorm:"column:price"`
 }
+
+type QueryJsonWithCount struct {
+	Data  []byte `json:"data"`
+	Total int    `json:"total"`
+}

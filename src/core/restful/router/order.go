@@ -6,7 +6,8 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-func Order(app *fiber.App, h *handler.Transaction, m *middleware.Middleware) {
-		// all
-		app.Add("POST", "/api/orders/transactions", m.VerifyJwt, h.Create)
+func Order(app *fiber.App, h *handler.Order, m *middleware.Middleware) {
+	// all
+	app.Add("POST", "/api/orders/transactions", m.VerifyJwt, h.Transaction)
+	app.Add("GET", "/api/orders/users/current", m.VerifyJwt, h.GetByCurrentUser)
 }
