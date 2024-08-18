@@ -7,6 +7,9 @@ import (
 )
 
 func Order(app *fiber.App, h *handler.Order, m *middleware.Middleware) {
+	// super admin
+	app.Add("PATCH", "/api/orders/:orderId/statuses", m.VerifyJwt, m.VerifySuperAdmin, h.UpdateStatus)
+
 	// admin & super admin
 	app.Add("GET", "/api/orders", m.VerifyJwt, m.VerifyAdmin, h.Get)
 

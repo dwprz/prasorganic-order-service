@@ -43,3 +43,8 @@ type CancelOrderReq struct {
 	UserId  string `json:"user_id" validate:"required,min=21,max=21"`
 	OrderId string `json:"order_id" validate:"required,min=21,max=21"`
 }
+
+type UpdateStatusReq struct {
+	OrderId string `json:"order_id" validate:"required,min=21,max=21"`
+	Status  string `json:"status" validation:"required,max=20"`
+}

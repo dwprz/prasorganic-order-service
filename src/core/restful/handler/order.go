@@ -84,7 +84,7 @@ func (t *Order) Cancellation(c *fiber.Ctx) error {
 	userData := c.Locals("user_data").(jwt.MapClaims)
 	userId := userData["user_id"].(string)
 
-	orderId := c.Query("orderId")
+	orderId := c.Params("orderId")
 
 	err := t.orderService.Cancel(c.Context(), &dto.CancelOrderReq{
 		UserId:  userId,
@@ -96,4 +96,20 @@ func (t *Order) Cancellation(c *fiber.Ctx) error {
 	}
 
 	return c.Status(200).JSON(fiber.Map{"data": "cancelled order successfully"})
+}
+
+func (t *Order) UpdateStatus(c *fiber.Ctx) error {
+	req := new(dto.UpdateStatusReq)
+	if err := c.BodyParser(req); err != nil {
+		return err
+	}
+
+	req.OrderId = c.Params("orderId")
+
+	err := t.orderService.UpdateStatus(c.Context(), req)
+	if err != nil {
+		return err
+	}
+
+	return c.Status(200).JSON(fiber.Map{"data": "updated order status successfully"})
 }

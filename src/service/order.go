@@ -105,3 +105,16 @@ func (o *OrderImpl) Cancel(ctx context.Context, data *dto.CancelOrderReq) error 
 
 	return err
 }
+
+func (o *OrderImpl) UpdateStatus(ctx context.Context, data *dto.UpdateStatusReq) error {
+	if err := v.Validate.Struct(data); err != nil {
+		return err
+	}
+
+	err := o.orderRepo.UpdateById(ctx, &entity.Order{
+		OrderId: data.OrderId,
+		Status:  entity.OrderStatus(data.Status),
+	})
+
+	return err
+}
