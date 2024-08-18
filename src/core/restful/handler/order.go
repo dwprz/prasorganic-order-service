@@ -57,7 +57,7 @@ func (t *Order) GetByCurrentUser(c *fiber.Ctx) error {
 		return err
 	}
 
-	return c.Status(201).JSON(fiber.Map{"data": res.Data, "paging": res.Paging})
+	return c.Status(200).JSON(fiber.Map{"data": res.Data, "paging": res.Paging})
 }
 
 func (t *Order) Get(c *fiber.Ctx) error {
@@ -77,5 +77,23 @@ func (t *Order) Get(c *fiber.Ctx) error {
 		return err
 	}
 
-	return c.Status(201).JSON(fiber.Map{"data": res.Data, "paging": res.Paging})
+	return c.Status(200).JSON(fiber.Map{"data": res.Data, "paging": res.Paging})
+}
+
+func (t *Order) Cancellation(c *fiber.Ctx) error {
+	userData := c.Locals("user_data").(jwt.MapClaims)
+	userId := userData["user_id"].(string)
+
+	orderId := c.Query("orderId")
+
+	err := t.orderService.Cancel(c.Context(), &dto.CancelOrderReq{
+		UserId:  userId,
+		OrderId: orderId,
+	})
+
+	if err != nil {
+		return err
+	}
+
+	return c.Status(200).JSON(fiber.Map{"data": "cancelled order successfully"})
 }

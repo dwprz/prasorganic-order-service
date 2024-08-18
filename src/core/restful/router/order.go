@@ -13,4 +13,5 @@ func Order(app *fiber.App, h *handler.Order, m *middleware.Middleware) {
 	// all
 	app.Add("POST", "/api/orders/transactions", m.VerifyJwt, h.Transaction)
 	app.Add("GET", "/api/orders/users/current", m.VerifyJwt, h.GetByCurrentUser)
+	app.Add("PATCH", "/api/orders/:orderId/cancellations", m.VerifyJwt, h.Cancellation)
 }

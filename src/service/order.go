@@ -4,6 +4,7 @@ import (
 	"context"
 	"strings"
 
+	"github.com/dwprz/prasorganic-order-service/src/common/errors"
 	"github.com/dwprz/prasorganic-order-service/src/common/helper"
 	v "github.com/dwprz/prasorganic-order-service/src/infrastructure/validator"
 	"github.com/dwprz/prasorganic-order-service/src/interface/repository"
@@ -77,4 +78,30 @@ func (o *OrderImpl) FindMany(ctx context.Context, data *dto.GetOrdersReq) (
 	}
 
 	return helper.FormatPagedData(res.Orders, res.TotalOrders, data.Page, limit), nil
+}
+
+func (o *OrderImpl) Cancel(ctx context.Context, data *dto.CancelOrderReq) error {
+	if err := v.Validate.Struct(data); err != nil {
+		return err
+	}
+
+	res, err := o.orderRepo.FindById(ctx, data.OrderId)
+	if err != nil {
+		return err
+	}
+
+	if res.Order.UserId != data.UserId {
+		return &errors.Response{HttpCode: 403, Message: "you do not have permission to cancel this order"}
+	}
+
+	if res.Order.ShippingId != "" {
+		return &errors.Response{HttpCode: 400, Message: "sorry, your order has been processed"}
+	}
+
+	err = o.orderRepo.UpdateById(ctx, &entity.Order{
+		OrderId: data.OrderId,
+		Status:  entity.CANCELLED,
+	})
+
+	return err
 }

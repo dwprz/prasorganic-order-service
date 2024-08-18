@@ -30,11 +30,16 @@ type TransactionReq struct {
 }
 
 type GetOrdersByCurrentUserReq struct {
-	UserId string `validate:"required,min=21,max=21"`
-	Page   int    `validate:"required,max=100"`
+	UserId string `json:"user_id" validate:"required,min=21,max=21"`
+	Page   int    `json:"page" validate:"required,max=100"`
 }
 
 type GetOrdersReq struct {
-	Status string `validate:"omitempty,max=20"`
-	Page   int    `validate:"required,max=100"`
+	Status string `json:"status" validate:"omitempty,max=20"`
+	Page   int    `json:"page" validate:"required,max=100"`
+}
+
+type CancelOrderReq struct {
+	UserId  string `json:"user_id" validate:"required,min=21,max=21"`
+	OrderId string `json:"order_id" validate:"required,min=21,max=21"`
 }
