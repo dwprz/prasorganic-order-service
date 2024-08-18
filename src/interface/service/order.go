@@ -10,5 +10,7 @@ import (
 type Order interface {
 	Create(ctx context.Context, data *dto.TransactionReq) error
 	FindManyByUserId(ctx context.Context, data *dto.GetOrdersByCurrentUserReq) (
-		*entity.DataWithPaging[[]*entity.OrderWithProducts], error) 
+		*entity.DataWithPaging[[]*entity.OrderWithProducts], error)
+	FindMany(ctx context.Context, data *dto.GetOrdersReq) (
+		*entity.DataWithPaging[[]*entity.OrderWithProducts], error)
 }

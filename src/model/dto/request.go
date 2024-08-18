@@ -33,3 +33,8 @@ type GetOrdersByCurrentUserReq struct {
 	UserId string `validate:"required,min=21,max=21"`
 	Page   int    `validate:"required,max=100"`
 }
+
+type GetOrdersReq struct {
+	Status string `validate:"omitempty,max=20"`
+	Page   int    `validate:"required,max=100"`
+}

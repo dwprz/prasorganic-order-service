@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"strings"
 
 	"github.com/dwprz/prasorganic-order-service/src/common/helper"
 	v "github.com/dwprz/prasorganic-order-service/src/infrastructure/validator"
@@ -44,6 +45,33 @@ func (o *OrderImpl) FindManyByUserId(ctx context.Context, data *dto.GetOrdersByC
 	limit, offset := helper.CreateLimitAndOffset(data.Page)
 
 	res, err := o.orderRepo.FindManyByUserId(ctx, data.UserId, limit, offset)
+	if err != nil {
+		return nil, err
+	}
+
+	return helper.FormatPagedData(res.Orders, res.TotalOrders, data.Page, limit), nil
+}
+
+func (o *OrderImpl) FindMany(ctx context.Context, data *dto.GetOrdersReq) (
+	*entity.DataWithPaging[[]*entity.OrderWithProducts], error) {
+
+	if err := v.Validate.Struct(data); err != nil {
+		return nil, err
+	}
+
+	limit, offset := helper.CreateLimitAndOffset(data.Page)
+
+	var res *dto.OrdersWithCountRes
+	var err error
+
+	switch {
+	case data.Status != "":
+		data.Status = strings.ToUpper(data.Status)
+		res, err = o.orderRepo.FindManyByStatus(ctx, data.Status, limit, offset)
+	default:
+		res, err = o.orderRepo.FindMany(ctx, limit, offset)
+	}
+
 	if err != nil {
 		return nil, err
 	}

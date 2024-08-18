@@ -59,3 +59,23 @@ func (t *Order) GetByCurrentUser(c *fiber.Ctx) error {
 
 	return c.Status(201).JSON(fiber.Map{"data": res.Data, "paging": res.Paging})
 }
+
+func (t *Order) Get(c *fiber.Ctx) error {
+	page, err := strconv.Atoi(c.Query("page", "1"))
+	if err != nil {
+		return err
+	}
+
+	status := c.Query("status", "paid")
+
+	res, err := t.orderService.FindMany(c.Context(), &dto.GetOrdersReq{
+		Status: status,
+		Page:   page,
+	})
+
+	if err != nil {
+		return err
+	}
+
+	return c.Status(201).JSON(fiber.Map{"data": res.Data, "paging": res.Paging})
+}
