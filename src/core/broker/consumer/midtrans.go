@@ -48,7 +48,16 @@ func (m *MidtransKafka) Consume(ctx context.Context) {
 				continue
 			}
 
-			go m.handler.ProcessMessage(ctx, msg)
+			go func(msg kafka.Message) {
+				defer func() {
+					if r := recover(); r != nil {
+						log.Logger.WithFields(logrus.Fields{"location": "consumer.MidtransKafka/Consume", "section": "ProcessMessage"}).Errorf("Recovered from panic: %v", r)
+					}
+				}()
+
+				m.handler.ProcessMessage(ctx, msg)
+			}(msg)
+
 		}
 	}
 }
