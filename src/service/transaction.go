@@ -93,7 +93,7 @@ func (t *TransactionImpl) HandleNotif(ctx context.Context, data *entity.Transact
 			return err
 		}
 
-		t.queueClient.Create("orders:shipping", "orders", payload, time.Duration(2*time.Second))
+		t.queueClient.Create("orders:shipping", "orders", payload, time.Duration(1*time.Hour))
 	}
 
 	if data.TransactionStatus == "cancel" {
