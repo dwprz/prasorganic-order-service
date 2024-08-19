@@ -28,3 +28,12 @@ func (a *OtpGrpcImpl) AddShippingId(ctx context.Context, data *pb.AddShippingIdR
 
 	return nil, err
 }
+
+func (a *OtpGrpcImpl) UpdateStatus(ctx context.Context, data *pb.UpdateStatusReq) (*emptypb.Empty, error) {
+	err := a.orderService.UpdateStatus(ctx, &dto.UpdateStatusReq{
+		OrderId: data.OrderId,
+		Status:  data.Status,
+	})
+
+	return nil, err
+}
