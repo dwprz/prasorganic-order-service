@@ -1,12 +1,12 @@
 package cbreaker
 
 import (
+	"net/http"
 	"time"
 
+	"github.com/dwprz/prasorganic-order-service/src/common/errors"
 	"github.com/dwprz/prasorganic-order-service/src/common/log"
 	"github.com/sony/gobreaker/v2"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 var Shipper *gobreaker.CircuitBreaker[any]
@@ -27,21 +27,19 @@ func init() {
 				return true
 			}
 
-			st, ok := status.FromError(err)
-			if !ok {
-				return false
-			}
+			if errRes, ok := err.(*errors.Response); ok {
+				successCode := []int{
+					http.StatusOK,
+					http.StatusCreated,
+					http.StatusAccepted,
+					http.StatusNoContent,
+					http.StatusNotFound,
+				}
 
-			statusCodeSuccess := []codes.Code{
-				codes.OK,
-				codes.InvalidArgument,
-				codes.NotFound,
-				codes.Canceled,
-			}
-
-			for _, code := range statusCodeSuccess {
-				if st.Code() == code {
-					return true
+				for _, code := range successCode {
+					if errRes.HttpCode == code {
+						return true
+					}
 				}
 			}
 

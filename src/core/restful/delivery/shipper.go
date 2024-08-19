@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/dwprz/prasorganic-order-service/src/common/errors"
 	"github.com/dwprz/prasorganic-order-service/src/common/helper"
 	"github.com/dwprz/prasorganic-order-service/src/infrastructure/cbreaker"
 	"github.com/dwprz/prasorganic-order-service/src/infrastructure/config"
@@ -42,7 +43,7 @@ func (s *ShipperImpl) ShippingOrder(ctx context.Context, data *entity.OrderWithP
 
 		code, body, _ := a.Bytes()
 		if code != 201 {
-			return "", fmt.Errorf(string(body))
+			return "", &errors.Response{HttpCode: code, Message: string(body)}
 		}
 
 		res := new(struct {
@@ -56,5 +57,14 @@ func (s *ShipperImpl) ShippingOrder(ctx context.Context, data *entity.OrderWithP
 		return res.Data.ShippingId, err
 	})
 
-	return res.(string), err
+	if err != nil {
+		return "", err
+	}
+
+	shippingId, ok := res.(string)
+	if !ok {
+		return "", fmt.Errorf("unexpected type %T expected string", res)
+	}
+
+	return shippingId, err
 }

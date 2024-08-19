@@ -13,7 +13,7 @@ var ProductGrpc *gobreaker.CircuitBreaker[any]
 
 func init() {
 	settings := gobreaker.Settings{
-		Name:        "product-grpc-client",
+		Name:        "product-grpc",
 		MaxRequests: 3,
 		Interval:    1 * time.Minute,
 		Timeout:     15 * time.Second,

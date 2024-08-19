@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/dwprz/prasorganic-order-service/src/common/errors"
 	"github.com/dwprz/prasorganic-order-service/src/common/helper"
 	"github.com/dwprz/prasorganic-order-service/src/infrastructure/cbreaker"
 	"github.com/dwprz/prasorganic-order-service/src/infrastructure/config"
@@ -47,7 +48,7 @@ func (m *MidtransImpl) Transaction(ctx context.Context, data *dto.TransactionReq
 
 		code, body, _ := a.Bytes()
 		if code != 201 {
-			return nil, fmt.Errorf(string(body))
+			return nil, &errors.Response{HttpCode: code, Message: string(body)}
 		}
 
 		res := new(dto.MidtransTxRes)
@@ -63,7 +64,7 @@ func (m *MidtransImpl) Transaction(ctx context.Context, data *dto.TransactionReq
 
 	txRes, ok := res.(*dto.MidtransTxRes)
 	if !ok {
-		return nil, fmt.Errorf("unexpected type %T", txRes)
+		return nil, fmt.Errorf("unexpected type %T expected *dto.MidtransTxRes", txRes)
 	}
 
 	return txRes, nil
