@@ -10,6 +10,7 @@ import (
 	"github.com/dwprz/prasorganic-order-service/src/interface/repository"
 	"github.com/dwprz/prasorganic-order-service/src/model/dto"
 	"github.com/dwprz/prasorganic-order-service/src/model/entity"
+	"google.golang.org/grpc/codes"
 	"gorm.io/gorm"
 )
 
@@ -219,8 +220,13 @@ func (o *OrderImpl) FindManyByStatus(ctx context.Context, status string, limit, 
 func (o *OrderImpl) UpdateById(ctx context.Context, data *entity.Order) error {
 	err := o.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 
-		if err := o.db.Table("orders").Updates(data).Error; err != nil {
-			return err
+		res := o.db.Table("orders").Updates(data)
+		if res.Error != nil {
+			return res.Error
+		}
+
+		if res.RowsAffected == 0 {
+			return &errors.Response{HttpCode: 404, GrpcCode: codes.NotFound, Message: "order not found"}
 		}
 
 		return nil

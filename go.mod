@@ -3,7 +3,7 @@ module github.com/dwprz/prasorganic-order-service
 go 1.21.3
 
 require (
-	github.com/dwprz/prasorganic-proto v0.0.28
+	github.com/dwprz/prasorganic-proto v0.0.31
 	github.com/go-playground/validator/v10 v10.22.0
 	github.com/gofiber/fiber/v2 v2.52.5
 	github.com/golang-jwt/jwt/v5 v5.2.1

@@ -13,4 +13,5 @@ type Order interface {
 	FindMany(ctx context.Context, data *dto.GetOrdersReq) (*entity.DataWithPaging[[]*entity.OrderWithProducts], error)
 	Cancel(ctx context.Context, data *dto.CancelOrderReq) error
 	UpdateStatus(ctx context.Context, data *dto.UpdateStatusReq) error
+	AddShippingId(ctx context.Context, data *dto.AddShippingIdReq) error
 }

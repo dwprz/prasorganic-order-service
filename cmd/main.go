@@ -59,5 +59,10 @@ func main() {
 
 	go restfulServer.Run()
 
+	grpcServer := grpc.InitServer(orderService)
+	defer grpcServer.Stop()
+
+	go grpcServer.Run()
+
 	<-ctx.Done()
 }

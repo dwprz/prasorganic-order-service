@@ -48,3 +48,8 @@ type UpdateStatusReq struct {
 	OrderId string `json:"order_id" validate:"required,min=21,max=21"`
 	Status  string `json:"status" validation:"required,max=20"`
 }
+
+type AddShippingIdReq struct {
+	OrderId    string `json:"order_id" validate:"required,min=21,max=21"`
+	ShippingId string `json:"shipping_id" validation:"required"`
+}

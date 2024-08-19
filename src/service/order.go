@@ -118,3 +118,16 @@ func (o *OrderImpl) UpdateStatus(ctx context.Context, data *dto.UpdateStatusReq)
 
 	return err
 }
+
+func (o *OrderImpl) AddShippingId(ctx context.Context, data *dto.AddShippingIdReq) error {
+	if err := v.Validate.Struct(data); err != nil {
+		return err
+	}
+
+	err := o.orderRepo.UpdateById(ctx, &entity.Order{
+		OrderId:    data.OrderId,
+		ShippingId: data.ShippingId,
+	})
+
+	return err
+}
