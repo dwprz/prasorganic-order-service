@@ -55,6 +55,6 @@ type Order struct {
 }
 
 type OrderWithProducts struct {
-	Order    Order          `json:"order"`
-	Products []ProductOrder `json:"products"`
+	Order    *Order          `json:"order"`
+	Products []*ProductOrder `json:"products"`
 }

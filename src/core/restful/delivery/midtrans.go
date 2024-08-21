@@ -14,13 +14,13 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-type MidtransImpl struct{}
+type MidtransRESTfulImpl struct{}
 
-func NewMidtrans() delivery.Midtrans {
-	return &MidtransImpl{}
+func NewMidtransRESTful() delivery.MidtransRESTful {
+	return &MidtransRESTfulImpl{}
 }
 
-func (m *MidtransImpl) Transaction(ctx context.Context, data *dto.TransactionReq) (*dto.MidtransTxRes, error) {
+func (m *MidtransRESTfulImpl) Transaction(ctx context.Context, data *dto.TransactionReq) (*dto.MidtransTxRes, error) {
 	res, err := cbreaker.Midtrans.Execute(func() (any, error) {
 		txReq := helper.FormatMidtransTxReq(data)
 

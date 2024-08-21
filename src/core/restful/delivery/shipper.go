@@ -14,13 +14,13 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-type ShipperImpl struct{}
+type ShipperRESTfulImpl struct{}
 
-func NewShipper() delivery.Shipper {
-	return &ShipperImpl{}
+func NewShipperRESTful() delivery.ShipperRESTful {
+	return &ShipperRESTfulImpl{}
 }
 
-func (s *ShipperImpl) ShippingOrder(ctx context.Context, data *entity.OrderWithProducts) (shippingId string, err error) {
+func (s *ShipperRESTfulImpl) ShippingOrder(ctx context.Context, data *entity.OrderWithProducts) (shippingId string, err error) {
 	res, err := cbreaker.Shipper.Execute(func() (any, error) {
 		shippingOrder := helper.FormatShippingOrderReq(data)
 

@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/dwprz/prasorganic-order-service/src/common/helper"
 	grpcclient "github.com/dwprz/prasorganic-order-service/src/core/grpc/client"
 	restfulclient "github.com/dwprz/prasorganic-order-service/src/core/restful/client"
 	v "github.com/dwprz/prasorganic-order-service/src/infrastructure/validator"
@@ -56,8 +55,6 @@ func (t *TransactionImpl) Create(ctx context.Context, data *dto.TransactionReq) 
 
 	data.Order.SnapToken = txRes.Token
 	data.Order.SnapRedirectURL = txRes.RedirectUrl
-
-	helper.LogJSON(data)
 
 	if err := t.orderService.Create(ctx, data); err != nil {
 		return nil, err

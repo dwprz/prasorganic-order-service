@@ -6,6 +6,6 @@ import (
 	"github.com/dwprz/prasorganic-order-service/src/model/dto"
 )
 
-type Midtrans interface {
+type MidtransRESTful interface {
 	Transaction(ctx context.Context, data *dto.TransactionReq) (*dto.MidtransTxRes, error)
 }

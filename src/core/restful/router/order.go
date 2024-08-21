@@ -6,7 +6,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-func Order(app *fiber.App, h *handler.Order, m *middleware.Middleware) {
+func Order(app *fiber.App, h *handler.OrderRESTful, m *middleware.Middleware) {
 	// super admin
 	app.Add("PATCH", "/api/orders/:orderId/statuses", m.VerifyJwt, m.VerifySuperAdmin, h.UpdateStatus)
 

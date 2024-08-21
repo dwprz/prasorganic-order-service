@@ -6,6 +6,6 @@ import (
 	"github.com/dwprz/prasorganic-order-service/src/model/entity"
 )
 
-type Shipper interface {
+type ShipperRESTful interface {
 	ShippingOrder(ctx context.Context, data *entity.OrderWithProducts) (shippingId string, err error)
 }

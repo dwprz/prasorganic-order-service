@@ -11,7 +11,7 @@ func FormatOrderWithProducts(data []*entity.QueryJoin) []*entity.OrderWithProduc
 
 		if dummy[order.OrderId] == nil {
 			dummy[order.OrderId] = &entity.OrderWithProducts{
-				Order: entity.Order{
+				Order: &entity.Order{
 					OrderId:         order.OrderId,
 					GrossAmount:     order.GrossAmount,
 					Status:          order.Status,
@@ -49,7 +49,7 @@ func FormatOrderWithProducts(data []*entity.QueryJoin) []*entity.OrderWithProduc
 			}
 		}
 
-		dummy[order.OrderId].Products = append(dummy[order.OrderId].Products, entity.ProductOrder{
+		dummy[order.OrderId].Products = append(dummy[order.OrderId].Products, &entity.ProductOrder{
 			OrderId:     order.OrderId,
 			ProductId:   order.ProductId,
 			ProductName: order.ProductName,

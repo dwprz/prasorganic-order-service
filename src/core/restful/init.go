@@ -10,7 +10,7 @@ import (
 )
 
 func InitServer(ts service.Transaction, os service.Order) *server.Restful {
-	orderHandler := handler.NewOrder(ts, os)
+	orderHandler := handler.NewOrderRESTful(ts, os)
 	middleware := middleware.New()
 
 	restfulServer := server.NewRestful(orderHandler, middleware)
@@ -18,8 +18,8 @@ func InitServer(ts service.Transaction, os service.Order) *server.Restful {
 }
 
 func InitClient() *client.Restful {
-	midtransDelivery := delivery.NewMidtrans()
-	shipperDelivery := delivery.NewShipper()
+	midtransDelivery := delivery.NewMidtransRESTful()
+	shipperDelivery := delivery.NewShipperRESTful()
 	restfulClient := client.NewRestful(midtransDelivery, shipperDelivery)
 
 	return restfulClient

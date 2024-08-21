@@ -9,19 +9,19 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-type Order struct {
+type OrderRESTful struct {
 	txService    service.Transaction
 	orderService service.Order
 }
 
-func NewOrder(ts service.Transaction, os service.Order) *Order {
-	return &Order{
+func NewOrderRESTful(ts service.Transaction, os service.Order) *OrderRESTful {
+	return &OrderRESTful{
 		txService:    ts,
 		orderService: os,
 	}
 }
 
-func (t *Order) Transaction(c *fiber.Ctx) error {
+func (t *OrderRESTful) Transaction(c *fiber.Ctx) error {
 	userData := c.Locals("user_data").(jwt.MapClaims)
 	userId := userData["user_id"].(string)
 
@@ -39,7 +39,7 @@ func (t *Order) Transaction(c *fiber.Ctx) error {
 	return c.Status(201).JSON(fiber.Map{"data": res})
 }
 
-func (t *Order) GetByCurrentUser(c *fiber.Ctx) error {
+func (t *OrderRESTful) GetByCurrentUser(c *fiber.Ctx) error {
 	userData := c.Locals("user_data").(jwt.MapClaims)
 	userId := userData["user_id"].(string)
 
@@ -60,7 +60,7 @@ func (t *Order) GetByCurrentUser(c *fiber.Ctx) error {
 	return c.Status(200).JSON(fiber.Map{"data": res.Data, "paging": res.Paging})
 }
 
-func (t *Order) Get(c *fiber.Ctx) error {
+func (t *OrderRESTful) Get(c *fiber.Ctx) error {
 	page, err := strconv.Atoi(c.Query("page", "1"))
 	if err != nil {
 		return err
@@ -80,7 +80,7 @@ func (t *Order) Get(c *fiber.Ctx) error {
 	return c.Status(200).JSON(fiber.Map{"data": res.Data, "paging": res.Paging})
 }
 
-func (t *Order) Cancellation(c *fiber.Ctx) error {
+func (t *OrderRESTful) Cancellation(c *fiber.Ctx) error {
 	userData := c.Locals("user_data").(jwt.MapClaims)
 	userId := userData["user_id"].(string)
 
@@ -98,7 +98,7 @@ func (t *Order) Cancellation(c *fiber.Ctx) error {
 	return c.Status(200).JSON(fiber.Map{"data": "cancelled order successfully"})
 }
 
-func (t *Order) UpdateStatus(c *fiber.Ctx) error {
+func (t *OrderRESTful) UpdateStatus(c *fiber.Ctx) error {
 	req := new(dto.UpdateStatusReq)
 	if err := c.BodyParser(req); err != nil {
 		return err

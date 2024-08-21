@@ -25,8 +25,8 @@ type MidtransTxReq struct {
 }
 
 type TransactionReq struct {
-	Order    *entity.Order          `json:"order"`
-	Products []*entity.ProductOrder `json:"products"`
+	Order    *entity.Order          `json:"order" validate:"required"`
+	Products []*entity.ProductOrder `json:"products" validate:"required,dive"`
 }
 
 type GetOrdersByCurrentUserReq struct {
