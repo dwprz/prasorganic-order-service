@@ -50,6 +50,7 @@ func (o *OrderQueue) ShippingTask(ctx context.Context, t *asynq.Task) error {
 
 	err = o.orderRepo.UpdateById(ctx, &entity.Order{
 		OrderId:    orderId,
+		Status:     entity.IN_PROGRESS,
 		ShippingId: shippingId,
 	})
 

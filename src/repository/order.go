@@ -129,7 +129,7 @@ func (o *OrderImpl) FindManyByUserId(ctx context.Context, userId string, limit, 
 		SELECT COUNT(*) FROM orders WHERE user_id = $1
 	),
 	cte_order_ids AS (
-		SELECT order_id FROM orders WHERE user_id = $1 LIMIT $2 OFFSET $3
+		SELECT order_id FROM orders WHERE user_id = $1 ORDER BY created_at DESC LIMIT $2 OFFSET $3
 	), 
 	cte_orders AS (
 		SELECT 
@@ -177,7 +177,7 @@ func (o *OrderImpl) FindManyByStatus(ctx context.Context, status string, limit, 
 		SELECT COUNT(*) FROM orders WHERE status = $1
 	),
 	cte_order_ids AS (
-		SELECT order_id FROM orders WHERE status = $1 LIMIT $2 OFFSET $3
+		SELECT order_id FROM orders WHERE status = $1 ORDER BY created_at DESC LIMIT $2 OFFSET $3
 	), 
 	cte_orders AS (
 		SELECT 

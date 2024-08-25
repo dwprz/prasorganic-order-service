@@ -66,7 +66,7 @@ func (t *OrderRESTful) Get(c *fiber.Ctx) error {
 		return err
 	}
 
-	status := c.Query("status", "paid")
+	status := c.Query("status")
 
 	res, err := t.orderService.FindMany(c.Context(), &dto.GetOrdersReq{
 		Status: status,

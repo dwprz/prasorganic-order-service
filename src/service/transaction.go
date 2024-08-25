@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"encoding/json"
+	"strings"
 	"time"
 
 	grpcclient "github.com/dwprz/prasorganic-order-service/src/core/grpc/client"
@@ -47,7 +48,7 @@ func (t *TransactionImpl) Create(ctx context.Context, data *dto.TransactionReq) 
 		return nil, err
 	}
 
-	data.Order.OrderId = orderId
+	data.Order.OrderId = strings.ToUpper(orderId)
 	txRes, err := t.restfulClient.Midtrans.Transaction(ctx, data)
 	if err != nil {
 		return nil, err
