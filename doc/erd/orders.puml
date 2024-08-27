@@ -1,0 +1,66 @@
+@startuml
+
+enum OrderStatus {
+    PENDING_PAYMENT
+    PAID
+    IN_PROGRESS
+    COMPLETED
+    CANCELLED
+    FAILED
+    REFUND_PROCESSING
+    REFUND_COMPLETED
+    RETURN_PROCESSING
+    LOST_OR_DAMAGED
+}
+
+
+entity "orders" as Order {
+    *order_id : VARCHAR(100) <<nanoid>> <<PK>>
+    --
+    gross_amount: INTEGER <<not null>>
+    status: OrderStatus <<not null>> default(PENDING_PAYMENT)
+    shipping_id: VARCHAR(100) <<nullable>>
+    courier: VARCHAR(50) <<not null>>
+    rate_id: INTEGER <<not null>>
+    rate_name: VARCHAR(50) <<not null>>
+    rate_type: VARCHAR(50) <<not null>>
+    cod: BOOLEAN <<not null>> default(FALSE)
+    use_insurance: BOOLEAN <<not null>>
+    package_type: INTEGER <<not null>>
+    payment_method: VARCHAR(50) <<nullable>>
+    snap_token: TEXT <<not null>>
+    snap_redirect_url: TEXT <<not null>>
+    user_id: VARCHAR(100) <<not null>>
+    email: VARCHAR(100) <<not null>>
+    buyer: VARCHAR(100) <<not null>>
+    length: INTEGER <<not null>>
+    width: INTEGER <<not null>>
+    height: INTEGER <<not null>>
+    weight: REAL <<not null>>
+    address_owner: VARCHAR(100) <<not null>>
+    street: VARCHAR(200) <<not null>>
+    area_id: INTEGER <<not null>>
+    area: VARCHAR(100) <<not null>>
+    lat: VARCHAR(100) <<not null>>
+    lng: VARCHAR(100) <<not null>>
+    suburb: VARCHAR(100) <<not null>>
+    city: VARCHAR(100) <<not null>>
+    province: VARCHAR(100) <<not null>>
+    whatsapp: VARCHAR(20) <<not null>>
+    created_at: TIMESTAMPZ(3) <<not null>> default(CURRENT_TIMESTAMP)
+    updated_at: TIMESTAMPZ(3)
+}
+
+entity "product_orders" as ProductOrder {
+    *order_id VARCHAR(100) <<not null>> <<PK>>,
+    *product_id INTEGER <<not null>> <<PK>>,
+    --
+    product_name VARCHAR(100) <<not null>>,
+    image VARCHAR(300) <<not null>>,
+    price INTEGER <<not null>>,
+    quantity INTEGER <<not null>>,
+}
+
+Order ||--|{ ProductOrder
+
+@enduml
