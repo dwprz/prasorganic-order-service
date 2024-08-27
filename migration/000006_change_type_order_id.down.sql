@@ -1,0 +1,3 @@
+ALTER TABLE orders ALTER COLUMN order_id TYPE TEXT;
+
+ALTER TABLE product_orders ALTER COLUMN order_id TYPE TEXT;

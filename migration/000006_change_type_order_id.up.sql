@@ -1,0 +1,3 @@
+ALTER TABLE orders ALTER COLUMN order_id TYPE VARCHAR(100);
+
+ALTER TABLE product_orders ALTER COLUMN order_id TYPE VARCHAR(100);
