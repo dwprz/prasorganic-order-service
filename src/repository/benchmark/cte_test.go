@@ -22,24 +22,70 @@ func init() {
 	postgres = database.NewPostgres()
 }
 
-func fullCTE(ctx context.Context, userId string, limit, offset int) (*dto.OrdersWithCountRes, error) {
-	queryRes := new(entity.QueryJsonWithCount)
+func fullCTE(ctx context.Context, limit, offset int) (*dto.OrdersWithCountRes, error) {
+	var queryRes []*entity.QueryJoin
 
 	query := `
 	WITH cte_total_orders AS (
-		SELECT COUNT(*) FROM orders WHERE user_id = $1
+		SELECT COUNT(*) AS total_orders FROM orders
 	),
 	cte_order_ids AS (
 		SELECT 
 			order_id 
 		FROM 
 			orders 
-		WHERE 
-			user_id = $1 
 		ORDER BY
 			created_at DESC
 		LIMIT 
-			$2 OFFSET $3
+			$1 OFFSET $2
+	), 
+	cte_orders AS (
+		SELECT 
+			*
+		FROM 
+			orders AS o 
+		INNER JOIN 
+			product_orders AS po ON o.order_id = po.order_id
+		WHERE
+			o.order_id IN (SELECT order_id FROM cte_order_ids)
+	)
+	SELECT cto.total_orders , co.* FROM cte_total_orders AS cto CROSS JOIN cte_orders AS co;
+	`
+
+	res := postgres.WithContext(ctx).Raw(query, limit, offset).Scan(&queryRes)
+	if res.Error != nil {
+		return nil, res.Error
+	}
+
+	if len(queryRes) == 0 {
+		return nil, &errors.Response{HttpCode: 404, Message: "orders not found"}
+	}
+
+	orders, total := helper.FormatOrderWithProducts(queryRes)
+	helper.OrderByCreatedAtDesc(orders)
+
+	return &dto.OrdersWithCountRes{
+		Orders:      orders,
+		TotalOrders: total,
+	}, nil
+}
+
+func fullCTE_WithJsonAgg(ctx context.Context, limit, offset int) (*dto.OrdersWithCountRes, error) {
+	queryRes := new(entity.QueryJsonWithCount)
+
+	query := `
+	WITH cte_total_orders AS (
+		SELECT COUNT(*) FROM orders
+	),
+	cte_order_ids AS (
+		SELECT 
+			order_id 
+		FROM 
+			orders 
+		ORDER BY
+			created_at DESC
+		LIMIT 
+			$1 OFFSET $2
 	), 
 	cte_orders AS (
 		SELECT 
@@ -56,7 +102,7 @@ func fullCTE(ctx context.Context, userId string, limit, offset int) (*dto.Orders
 		(SELECT json_agg(row_to_json(cte_orders.*)) FROM cte_orders) AS data;
 	`
 
-	res := postgres.WithContext(ctx).Raw(query, userId, limit, offset).Scan(&queryRes)
+	res := postgres.WithContext(ctx).Raw(query, limit, offset).Scan(&queryRes)
 	if res.Error != nil {
 		return nil, res.Error
 	}
@@ -70,7 +116,7 @@ func fullCTE(ctx context.Context, userId string, limit, offset int) (*dto.Orders
 		return nil, err
 	}
 
-	orders := helper.FormatOrderWithProducts(dummyOrders)
+	orders, _ := helper.FormatOrderWithProducts(dummyOrders)
 	helper.OrderByCreatedAtDesc(orders)
 
 	return &dto.OrdersWithCountRes{
@@ -79,13 +125,13 @@ func fullCTE(ctx context.Context, userId string, limit, offset int) (*dto.Orders
 	}, nil
 }
 
-func nonFullCTE_1(ctx context.Context, userId string, limit, offset int) (*dto.OrdersWithCountRes, error) {
+func nonFullCTE_1(ctx context.Context, limit, offset int) (*dto.OrdersWithCountRes, error) {
 
 	var totalOrders struct {
 		Count int
 	}
 
-	if err := postgres.WithContext(ctx).Raw(`SELECT COUNT(*) FROM orders WHERE user_id = $1`, userId).Scan(&totalOrders).Error; err != nil {
+	if err := postgres.WithContext(ctx).Raw(`SELECT COUNT(*) FROM orders;`).Scan(&totalOrders).Error; err != nil {
 		return nil, err
 	}
 
@@ -97,12 +143,10 @@ func nonFullCTE_1(ctx context.Context, userId string, limit, offset int) (*dto.O
 			order_id 
 		FROM 
 			orders 
-		WHERE 
-			user_id = $1 
 		ORDER BY
 			created_at DESC
 		LIMIT 
-			$2 OFFSET $3
+			$1 OFFSET $2
 	), 
 	cte_orders AS (
 		SELECT 
@@ -117,7 +161,7 @@ func nonFullCTE_1(ctx context.Context, userId string, limit, offset int) (*dto.O
 	SELECT * FROM cte_orders;
 	`
 
-	res := postgres.WithContext(ctx).Raw(query, userId, limit, offset).Scan(&queryRes)
+	res := postgres.WithContext(ctx).Raw(query, limit, offset).Scan(&queryRes)
 	if res.Error != nil {
 		return nil, res.Error
 	}
@@ -126,7 +170,7 @@ func nonFullCTE_1(ctx context.Context, userId string, limit, offset int) (*dto.O
 		return nil, &errors.Response{HttpCode: 404, Message: "orders not found"}
 	}
 
-	orders := helper.FormatOrderWithProducts(queryRes)
+	orders, _ := helper.FormatOrderWithProducts(queryRes)
 	helper.OrderByCreatedAtDesc(orders)
 
 	return &dto.OrdersWithCountRes{
@@ -135,19 +179,19 @@ func nonFullCTE_1(ctx context.Context, userId string, limit, offset int) (*dto.O
 	}, nil
 }
 
-func nonFullCTE_2(ctx context.Context, userId string, limit, offset int) (*dto.OrdersWithCountRes, error) {
+func nonFullCTE_2(ctx context.Context, limit, offset int) (*dto.OrdersWithCountRes, error) {
 
 	var totalOrders struct {
 		Count int
 	}
 
-	if err := postgres.WithContext(ctx).Raw(`SELECT COUNT(*) FROM orders WHERE user_id = $1`, userId).Scan(&totalOrders).Error; err != nil {
+	if err := postgres.WithContext(ctx).Raw(`SELECT COUNT(*) FROM orders;`).Scan(&totalOrders).Error; err != nil {
 		return nil, err
 	}
 
 	var orderIds []string
 
-	if err := postgres.WithContext(ctx).Raw(`SELECT order_id FROM orders WHERE user_id = $1 ORDER BY created_at ASC LIMIT $2 OFFSET $3`, userId, limit, offset).Scan(&orderIds).Error; err != nil {
+	if err := postgres.WithContext(ctx).Raw(`SELECT order_id FROM orders ORDER BY created_at ASC LIMIT $1 OFFSET $2;`, limit, offset).Scan(&orderIds).Error; err != nil {
 		return nil, err
 	}
 
@@ -173,7 +217,7 @@ func nonFullCTE_2(ctx context.Context, userId string, limit, offset int) (*dto.O
 		return nil, &errors.Response{HttpCode: 404, Message: "orders not found"}
 	}
 
-	orders := helper.FormatOrderWithProducts(queryRes)
+	orders, _ := helper.FormatOrderWithProducts(queryRes)
 	helper.OrderByCreatedAtDesc(orders)
 
 	return &dto.OrdersWithCountRes{
@@ -182,11 +226,11 @@ func nonFullCTE_2(ctx context.Context, userId string, limit, offset int) (*dto.O
 	}, nil
 }
 
-func gorm_1(ctx context.Context, userId string, limit, offset int) (*dto.OrdersWithCountRes, error) {
+func gorm_1(ctx context.Context, limit, offset int) (*dto.OrdersWithCountRes, error) {
 
 	var totalOrders int64
 
-	if err := postgres.WithContext(ctx).Table("orders").Where("user_id = ?", userId).Count(&totalOrders).Error; err != nil {
+	if err := postgres.WithContext(ctx).Table("orders").Count(&totalOrders).Error; err != nil {
 		return nil, err
 	}
 
@@ -198,12 +242,10 @@ func gorm_1(ctx context.Context, userId string, limit, offset int) (*dto.OrdersW
 			order_id 
 		FROM 
 			orders 
-		WHERE 
-			user_id = $1 
 		ORDER BY
 			created_at DESC
 		LIMIT 
-			$2 OFFSET $3
+			$1 OFFSET $2
 	), 
 	cte_orders AS (
 		SELECT 
@@ -218,7 +260,7 @@ func gorm_1(ctx context.Context, userId string, limit, offset int) (*dto.OrdersW
 	SELECT * FROM cte_orders;
 	`
 
-	res := postgres.WithContext(ctx).Raw(query, userId, limit, offset).Scan(&queryRes)
+	res := postgres.WithContext(ctx).Raw(query, limit, offset).Scan(&queryRes)
 	if res.Error != nil {
 		return nil, res.Error
 	}
@@ -227,7 +269,7 @@ func gorm_1(ctx context.Context, userId string, limit, offset int) (*dto.OrdersW
 		return nil, &errors.Response{HttpCode: 404, Message: "orders not found"}
 	}
 
-	orders := helper.FormatOrderWithProducts(queryRes)
+	orders, _ := helper.FormatOrderWithProducts(queryRes)
 	helper.OrderByCreatedAtDesc(orders)
 
 	return &dto.OrdersWithCountRes{
@@ -236,11 +278,11 @@ func gorm_1(ctx context.Context, userId string, limit, offset int) (*dto.OrdersW
 	}, nil
 }
 
-func gorm_2(ctx context.Context, userId string, limit, offset int) (*dto.OrdersWithCountRes, error) {
+func gorm_2(ctx context.Context, limit, offset int) (*dto.OrdersWithCountRes, error) {
 
 	var totalOrders int64
 
-	if err := postgres.WithContext(ctx).Table("orders").Where("user_id = ?", userId).Count(&totalOrders).Error; err != nil {
+	if err := postgres.WithContext(ctx).Table("orders").Count(&totalOrders).Error; err != nil {
 		return nil, err
 	}
 
@@ -248,7 +290,7 @@ func gorm_2(ctx context.Context, userId string, limit, offset int) (*dto.OrdersW
 		OrderId string
 	}
 
-	err := postgres.WithContext(ctx).Table("orders").Select("order_id").Where("user_id = ?", userId).Order("created_at DESC").Limit(limit).Offset(offset).Scan(&orderIds).Error
+	err := postgres.WithContext(ctx).Table("orders").Select("order_id").Order("created_at DESC").Limit(limit).Offset(offset).Scan(&orderIds).Error
 	if err != nil {
 		return nil, err
 	}
@@ -280,7 +322,7 @@ func gorm_2(ctx context.Context, userId string, limit, offset int) (*dto.OrdersW
 		return nil, &errors.Response{HttpCode: 404, Message: "orders not found"}
 	}
 
-	orders := helper.FormatOrderWithProducts(queryRes)
+	orders, _ := helper.FormatOrderWithProducts(queryRes)
 	helper.OrderByCreatedAtDesc(orders)
 
 	return &dto.OrdersWithCountRes{
@@ -292,113 +334,140 @@ func gorm_2(ctx context.Context, userId string, limit, offset int) (*dto.OrdersW
 func Benchmark_CompareQueryCTE(b *testing.B) {
 	b.Run("Full CTE", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
-			fullCTE(context.Background(), "user_1", 20, 0)
+			fullCTE(context.Background(), 20, 0)
+		}
+	})
+
+	b.Run("Full CTE with json agg", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			fullCTE_WithJsonAgg(context.Background(), 20, 0)
 		}
 	})
 
 	b.Run("Non Full CTE 1", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
-			nonFullCTE_1(context.Background(), "user_1", 20, 0)
+			nonFullCTE_1(context.Background(), 20, 0)
 		}
 	})
 
 	b.Run("Non FUll CTE 2", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
-			nonFullCTE_2(context.Background(), "user_1", 20, 0)
+			nonFullCTE_2(context.Background(), 20, 0)
 		}
 	})
 
 	b.Run("GORM 1", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
-			gorm_1(context.Background(), "user_1", 20, 0)
+			gorm_1(context.Background(), 20, 0)
 		}
 	})
 
 	b.Run("GORM 2", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
-			gorm_2(context.Background(), "user_1", 20, 0)
+			gorm_2(context.Background(), 20, 0)
 		}
 	})
 }
 
 // 1 ms = 1.000.000 ns
 // 1 s = 1000 ms
+
 //================================ Full CTE ================================
 // test 1:
-// Benchmark_CompareQueryCTE/With_CTE-12               2779            400939 ns/op
+// Benchmark_CompareQueryCTE/Full_CTE-12               1629            742773 ns/op
 // PASS
-// ok      github.com/dwprz/prasorganic-order-service/src/repository/benchmark     1.173s
+// ok      github.com/dwprz/prasorganic-order-service/src/repository/benchmark     2.274s
 
 // test 2:
-// Benchmark_CompareQueryCTE/With_CTE-12               2896            403285 ns/op
+// Benchmark_CompareQueryCTE/Full_CTE-12               1464            755414 ns/op
 // PASS
-// ok      github.com/dwprz/prasorganic-order-service/src/repository/benchmark     2.052s
+// ok      github.com/dwprz/prasorganic-order-service/src/repository/benchmark     1.204s
 
 // test 3:
-// Benchmark_CompareQueryCTE/With_CTE-12               2967            398861 ns/op
+// Benchmark_CompareQueryCTE/Full_CTE-12               1497            745242 ns/op
 // PASS
-// ok      github.com/dwprz/prasorganic-order-service/src/repository/benchmark     2.227s
+// ok      github.com/dwprz/prasorganic-order-service/src/repository/benchmark     1.212s
+
+//================================ Full CTE With JSON Agg ================================
+// test 1:
+// Benchmark_CompareQueryCTE/Full_CTE_with_json_agg-12                 1126           1034334 ns/op
+// PASS
+// ok      github.com/dwprz/prasorganic-order-service/src/repository/benchmark     1.287s
+
+// test 2:
+// Benchmark_CompareQueryCTE/Full_CTE_with_json_agg-12                  966           1167719 ns/op
+// PASS
+// ok      github.com/dwprz/prasorganic-order-service/src/repository/benchmark     1.269s
+
+// test 3:
+// Benchmark_CompareQueryCTE/Full_CTE_with_json_agg-12                 1069           1160321 ns/op
+// PASS
+// ok      github.com/dwprz/prasorganic-order-service/src/repository/benchmark     2.383s
 
 //================================ Non FUll CTE 1 ================================
+
 // test 1:
-// Benchmark_CompareQueryCTE/Non_CTE_1-12              2514            436977 ns/op
+// Benchmark_CompareQueryCTE/Non_Full_CTE_1-12                 1407            810431 ns/op
 // PASS
-// ok      github.com/dwprz/prasorganic-order-service/src/repository/benchmark     1.162s
+// ok      github.com/dwprz/prasorganic-order-service/src/repository/benchmark     1.242s
 
 // test 2:
-// Benchmark_CompareQueryCTE/Non_CTE_1-12              2533            438572 ns/op
+// Benchmark_CompareQueryCTE/Non_Full_CTE_1-12                 1448            813744 ns/op
 // PASS
-// ok      github.com/dwprz/prasorganic-order-service/src/repository/benchmark     1.174s
+// ok      github.com/dwprz/prasorganic-order-service/src/repository/benchmark     2.277s
 
-// test 3:
-// Benchmark_CompareQueryCTE/Non_CTE_1-12              2738            433828 ns/op
+// test 3
+// Benchmark_CompareQueryCTE/Non_Full_CTE_1-12                 1218            832710 ns/op
 // PASS
-// ok      github.com/dwprz/prasorganic-order-service/src/repository/benchmark     2.223s
+// ok      github.com/dwprz/prasorganic-order-service/src/repository/benchmark     1.129s
 
 //================================ Non Full CTE 2 ================================
+
 // test 1:
-// Benchmark_CompareQueryCTE/Non_CTE_2-12              2257            516415 ns/op
+// Benchmark_CompareQueryCTE/Non_FUll_CTE_2-12                 1304            880243 ns/op
 // PASS
-// ok      github.com/dwprz/prasorganic-order-service/src/repository/benchmark     2.135s
+// ok      github.com/dwprz/prasorganic-order-service/src/repository/benchmark     1.256s
 
 // test 2:
-// Benchmark_CompareQueryCTE/Non_CTE_2-12              2325            522300 ns/op
+// Benchmark_CompareQueryCTE/Non_FUll_CTE_2-12                 1328            899630 ns/op
 // PASS
-// ok      github.com/dwprz/prasorganic-order-service/src/repository/benchmark     2.080s
+// ok      github.com/dwprz/prasorganic-order-service/src/repository/benchmark     1.301s
 
 // test 3:
-// Benchmark_CompareQueryCTE/Non_CTE_2-12              2163            516490 ns/op
+// Benchmark_CompareQueryCTE/Non_FUll_CTE_2-12                 1304            878167 ns/op
 // PASS
-// ok      github.com/dwprz/prasorganic-order-service/src/repository/benchmark     1.188s
+// ok      github.com/dwprz/prasorganic-order-service/src/repository/benchmark     1.253s
 
 //================================ GORM 1 ================================
+
 // test 1:
-// Benchmark_CompareQueryCTE/GORM_1-12                 2541            447598 ns/op
+// Benchmark_CompareQueryCTE/GORM_1-12                 1400            816819 ns/op
 // PASS
-// ok      github.com/dwprz/prasorganic-order-service/src/repository/benchmark     1.200s
+// ok      github.com/dwprz/prasorganic-order-service/src/repository/benchmark     1.245s
 
 // test 2:
-// Benchmark_CompareQueryCTE/GORM_1-12                 2512            450063 ns/op
+// Benchmark_CompareQueryCTE/GORM_1-12                 1358            839860 ns/op
 // PASS
-// ok      github.com/dwprz/prasorganic-order-service/src/repository/benchmark     1.194s
+// ok      github.com/dwprz/prasorganic-order-service/src/repository/benchmark     1.244s
 
 // test 3:
-// Benchmark_CompareQueryCTE/GORM_1-12                 2418            441662 ns/op
+// Benchmark_CompareQueryCTE/GORM_1-12                 1392            829174 ns/op
 // PASS
-// ok      github.com/dwprz/prasorganic-order-service/src/repository/benchmark     1.135s
+// ok      github.com/dwprz/prasorganic-order-service/src/repository/benchmark     1.256s
 
 //================================ GORM 2 ================================
+
 // test 1:
-// Benchmark_CompareQueryCTE/GORM_2-12                 2143            530503 ns/op
+// Benchmark_CompareQueryCTE/GORM_2-12                 1281            881933 ns/op
 // PASS
-// ok      github.com/dwprz/prasorganic-order-service/src/repository/benchmark     1.208s
+// ok      github.com/dwprz/prasorganic-order-service/src/repository/benchmark     1.239s
 
 // test 2:
-// Benchmark_CompareQueryCTE/GORM_2-12                 2245            529915 ns/op
+// Benchmark_CompareQueryCTE/GORM_2-12                 1264            876514 ns/op
 // PASS
-// ok      github.com/dwprz/prasorganic-order-service/src/repository/benchmark     2.174s
+// ok      github.com/dwprz/prasorganic-order-service/src/repository/benchmark     1.219s
 
 // test 3:
-// Benchmark_CompareQueryCTE/GORM_2-12                 2073            541375 ns/op
+// Benchmark_CompareQueryCTE/GORM_2-12                 1275            930213 ns/op
 // PASS
-// ok      github.com/dwprz/prasorganic-order-service/src/repository/benchmark     1.195s
+// ok      github.com/dwprz/prasorganic-order-service/src/repository/benchmark     2.254s

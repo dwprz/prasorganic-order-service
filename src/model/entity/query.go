@@ -3,6 +3,7 @@ package entity
 import "time"
 
 type QueryJoin struct {
+	TotalOrders     int         `json:"total_orders,omitempty" gorm:"column:total_orders"`
 	OrderId         string      `json:"order_id,omitempty" gorm:"column:order_id"`
 	GrossAmount     int         `json:"gross_amount" gorm:"column:gross_amount"`
 	Status          OrderStatus `json:"status" gorm:"column:status"`

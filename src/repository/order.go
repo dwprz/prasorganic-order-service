@@ -2,7 +2,6 @@ package repository
 
 import (
 	"context"
-	"encoding/json"
 
 	"github.com/dwprz/prasorganic-order-service/src/common/errors"
 	"github.com/dwprz/prasorganic-order-service/src/common/helper"
@@ -69,17 +68,17 @@ func (o *OrderImpl) FindById(ctx context.Context, orderId string) (*entity.Order
 		return nil, &errors.Response{HttpCode: 404, Message: "order not found"}
 	}
 
-	orders := helper.FormatOrderWithProducts(queryRes)
+	orders, _ := helper.FormatOrderWithProducts(queryRes)
 
 	return orders[0], nil
 }
 
 func (o *OrderImpl) FindMany(ctx context.Context, limit, offset int) (*dto.OrdersWithCountRes, error) {
-	queryRes := new(entity.QueryJsonWithCount)
+	var queryRes []*entity.QueryJoin
 
 	query := `
 	WITH cte_total_orders AS (
-		SELECT COUNT(*) FROM orders
+		SELECT COUNT(*) AS total_orders FROM orders
 	),
 	cte_order_ids AS (
 		SELECT order_id FROM orders ORDER BY created_at DESC LIMIT $1 OFFSET $2
@@ -94,9 +93,7 @@ func (o *OrderImpl) FindMany(ctx context.Context, limit, offset int) (*dto.Order
 		WHERE
 			o.order_id IN (SELECT order_id FROM cte_order_ids)
 	)
-	SELECT 
-		(SELECT * FROM cte_total_orders) AS total,
-		(SELECT json_agg(row_to_json(cte_orders.*)) FROM cte_orders) AS data;
+	SELECT cto.total_orders, co.* FROM cte_total_orders AS cto CROSS JOIN cte_orders AS co;
 	`
 
 	res := o.db.WithContext(ctx).Raw(query, limit, offset).Scan(&queryRes)
@@ -104,29 +101,24 @@ func (o *OrderImpl) FindMany(ctx context.Context, limit, offset int) (*dto.Order
 		return nil, res.Error
 	}
 
-	if len(queryRes.Data) == 0 {
+	if len(queryRes) == 0 {
 		return nil, &errors.Response{HttpCode: 404, Message: "orders not found"}
 	}
 
-	var dummyOrders []*entity.QueryJoin
-	if err := json.Unmarshal(queryRes.Data, &dummyOrders); err != nil {
-		return nil, err
-	}
-
-	orders := helper.FormatOrderWithProducts(dummyOrders)
+	orders, total := helper.FormatOrderWithProducts(queryRes)
 
 	return &dto.OrdersWithCountRes{
 		Orders:      orders,
-		TotalOrders: queryRes.Total,
+		TotalOrders: total,
 	}, nil
 }
 
 func (o *OrderImpl) FindManyByUserId(ctx context.Context, userId string, limit, offset int) (*dto.OrdersWithCountRes, error) {
-	queryRes := new(entity.QueryJsonWithCount)
+	var queryRes []*entity.QueryJoin
 
 	query := `
 	WITH cte_total_orders AS (
-		SELECT COUNT(*) FROM orders WHERE user_id = $1
+		SELECT COUNT(*) AS total_orders FROM orders WHERE user_id = $1
 	),
 	cte_order_ids AS (
 		SELECT order_id FROM orders WHERE user_id = $1 ORDER BY created_at DESC LIMIT $2 OFFSET $3
@@ -141,9 +133,7 @@ func (o *OrderImpl) FindManyByUserId(ctx context.Context, userId string, limit, 
 		WHERE
 			o.order_id IN (SELECT order_id FROM cte_order_ids)
 	)
-	SELECT 
-		(SELECT * FROM cte_total_orders) AS total,
-		(SELECT json_agg(row_to_json(cte_orders.*)) FROM cte_orders) AS data;
+	SELECT cto.total_orders, co.* FROM cte_total_orders AS cto CROSS JOIN cte_orders AS co;
 	`
 
 	res := o.db.WithContext(ctx).Raw(query, userId, limit, offset).Scan(&queryRes)
@@ -151,30 +141,25 @@ func (o *OrderImpl) FindManyByUserId(ctx context.Context, userId string, limit, 
 		return nil, res.Error
 	}
 
-	if len(queryRes.Data) == 0 {
+	if len(queryRes) == 0 {
 		return nil, &errors.Response{HttpCode: 404, Message: "orders not found"}
 	}
 
-	var dummyOrders []*entity.QueryJoin
-	if err := json.Unmarshal(queryRes.Data, &dummyOrders); err != nil {
-		return nil, err
-	}
-
-	orders := helper.FormatOrderWithProducts(dummyOrders)
+	orders, total := helper.FormatOrderWithProducts(queryRes)
 	helper.OrderByCreatedAtDesc(orders)
 
 	return &dto.OrdersWithCountRes{
 		Orders:      orders,
-		TotalOrders: queryRes.Total,
+		TotalOrders: total,
 	}, nil
 }
 
 func (o *OrderImpl) FindManyByStatus(ctx context.Context, status string, limit, offset int) (*dto.OrdersWithCountRes, error) {
-	queryRes := new(entity.QueryJsonWithCount)
+	var queryRes []*entity.QueryJoin
 
 	query := `
 	WITH cte_total_orders AS (
-		SELECT COUNT(*) FROM orders WHERE status = $1
+		SELECT COUNT(*) AS total_orders FROM orders WHERE status = $1
 	),
 	cte_order_ids AS (
 		SELECT order_id FROM orders WHERE status = $1 ORDER BY created_at DESC LIMIT $2 OFFSET $3
@@ -189,9 +174,7 @@ func (o *OrderImpl) FindManyByStatus(ctx context.Context, status string, limit, 
 		WHERE
 			o.order_id IN (SELECT order_id FROM cte_order_ids)
 	)
-	SELECT 
-		(SELECT * FROM cte_total_orders) AS total,
-		(SELECT json_agg(row_to_json(cte_orders.*)) FROM cte_orders) AS data;
+	SELECT cto.total_orders, co.* FROM cte_total_orders AS cto CROSS JOIN cte_orders AS co;
 	`
 
 	res := o.db.WithContext(ctx).Raw(query, status, limit, offset).Scan(&queryRes)
@@ -199,21 +182,16 @@ func (o *OrderImpl) FindManyByStatus(ctx context.Context, status string, limit, 
 		return nil, res.Error
 	}
 
-	if len(queryRes.Data) == 0 {
+	if len(queryRes) == 0 {
 		return nil, &errors.Response{HttpCode: 404, Message: "orders not found"}
 	}
 
-	var dummyOrders []*entity.QueryJoin
-	if err := json.Unmarshal(queryRes.Data, &dummyOrders); err != nil {
-		return nil, err
-	}
-
-	orders := helper.FormatOrderWithProducts(dummyOrders)
+	orders, total := helper.FormatOrderWithProducts(queryRes)
 	helper.OrderByCreatedAtDesc(orders)
 
 	return &dto.OrdersWithCountRes{
 		Orders:      orders,
-		TotalOrders: queryRes.Total,
+		TotalOrders: total,
 	}, nil
 }
 

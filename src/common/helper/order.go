@@ -4,7 +4,7 @@ import (
 	"github.com/dwprz/prasorganic-order-service/src/model/entity"
 )
 
-func FormatOrderWithProducts(data []*entity.QueryJoin) []*entity.OrderWithProducts {
+func FormatOrderWithProducts(data []*entity.QueryJoin) (orders []*entity.OrderWithProducts, totalOrders int) {
 
 	dummy := make(map[string]*entity.OrderWithProducts)
 	for _, order := range data {
@@ -59,5 +59,5 @@ func FormatOrderWithProducts(data []*entity.QueryJoin) []*entity.OrderWithProduc
 		})
 	}
 
-	return MapValues(dummy)
+	return MapValues(dummy), data[0].TotalOrders
 }
