@@ -30,6 +30,7 @@ func main() {
 	handleCloseApp(cancel)
 
 	postgresDB := database.NewPostgres()
+	defer database.ClosePostgres(postgresDB)
 
 	restfulClient := restful.InitClient()
 	grpcClient := grpc.InitClient()
